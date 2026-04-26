@@ -4799,12 +4799,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-plugin-react-refresh@npm:^0.3.4":
-  version: 0.3.5
-  resolution: "eslint-plugin-react-refresh@npm:0.3.5"
+"eslint-plugin-react-refresh@npm:^0.5.2":
+  version: 0.5.2
+  resolution: "eslint-plugin-react-refresh@npm:0.5.2"
   peerDependencies:
-    eslint: ">=7"
-  checksum: 8d44201968838ad0ac13311fe593bc422ce80d9143d104c7485e8bcdeb4f8c3b4cda21322a7e360129f14912a980d23e2fb1f9f10d9701c623901e359bd7dd17
+    eslint: ^9 || ^10
+  checksum: cf88dfa5e71ed7cf781c09dca2d65d866737b5555ad7e69374ec9abaf4f479f42d631fdeceb472abd7158ffc2841d8cfa9eb8a9228cfa949c1c7c0da263d2949
   languageName: node
   linkType: hard
 
@@ -7457,7 +7457,7 @@ __metadata:
     "@vitejs/plugin-react": ^4.0.0
     ahooks: ^3.7.7
     eslint-plugin-react-hooks: ^4.6.0
-    eslint-plugin-react-refresh: ^0.3.4
+    eslint-plugin-react-refresh: ^0.5.2
     framer-motion: ^10.12.16
     react: ^18.3.1
     react-dom: ^18.2.0
