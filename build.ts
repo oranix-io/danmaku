@@ -37,7 +37,7 @@ async function buildMain() {
     ...buildParams,
     entryPoints: [resolve(__dirname, 'main/index.ts')],
     platform: 'node',
-    target: 'node18',
+    target: 'node20',
     format: 'cjs',
   });
 
@@ -60,7 +60,7 @@ async function buildPreload() {
       ...Object.values(preloadScripts).map((v) => resolve(__dirname, v)),
     ],
     platform: 'node',
-    target: 'node18',
+    target: 'node20',
     format: 'iife',
   });
 
