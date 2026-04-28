@@ -5,9 +5,3 @@ declare global {
   const danmaku: IMainWorld['danmaku'];
   const obs: IMainWorld['obs'];
 }
-
-import type { IMainWorld } from '../../preload/index.d.ts';
-
-declare global {
-  const danmaku: IMainWorld['danmaku'];
-}
