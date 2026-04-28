@@ -1,6 +1,6 @@
-import updateElectron from 'update-electron-app';
+import { updateElectronApp } from 'update-electron-app';
 
-updateElectron();
+updateElectronApp();
 
 import {
   app,
