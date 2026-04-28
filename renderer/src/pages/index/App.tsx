@@ -6,19 +6,44 @@ import {
   Field,
   Grid,
   GridItem,
+  Input,
   ListItem,
   ListRoot,
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
-import { Input } from '@chakra-ui/react';
+import type { ObsPlatform, ObsQuality } from '@common/obs';
+
+const SENSITIVE_DATA_CLEAR_TIMEOUT_MS = 10 * 60 * 1000;
 
 function App() {
   const [roomId, setRoomId] = useLocalStorageState('roomId', {
     defaultValue: '',
   });
+  const [obsPlatform, setObsPlatform] = useLocalStorageState<ObsPlatform>(
+    'obsPlatform',
+    {
+      defaultValue: 'bilibili',
+    }
+  );
+  const [obsQuality, setObsQuality] = useLocalStorageState<ObsQuality>(
+    'obsQuality',
+    {
+      defaultValue: 'hd',
+    }
+  );
+  const [obsAddress, setObsAddress] = useLocalStorageState('obsAddress', {
+    defaultValue: 'ws://127.0.0.1:4455',
+  });
+  const [obsPassword, setObsPassword] = useState('');
+  const [rtmpServer, setRtmpServer] = useState('');
+  const [streamKey, setStreamKey] = useState('');
+  const [obsApplyStatus, setObsApplyStatus] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  }>();
 
   const [settings, setSettings] = useLocalStorageState('settings', {
     defaultValue: {},
@@ -56,6 +81,168 @@ function App() {
     );
   };
 
+  const renderObsSettings = () => {
+    const preset = obs.presets[obsPlatform ?? 'bilibili'][obsQuality ?? 'hd'];
+    return (
+      <Box className='obs-settings'>
+        <Box display='flex' flexDirection='column' gap={4}>
+          <Box>
+            <h1>OBS 一键配置</h1>
+            <Box>
+              选择平台和清晰度后，会通过 OBS WebSocket 写入推荐编码、码率、分辨率、帧率、关键帧和自定义 RTMP。推流地址和密钥需要从平台开播页面手动填写，不会保存到本地。
+            </Box>
+          </Box>
+
+          <Box display='grid' gridTemplateColumns='repeat(2, minmax(0, 1fr))' gap={4} alignItems='flex-start'>
+            <Field.Root>
+              <Field.Label>平台</Field.Label>
+              <select
+                value={obsPlatform}
+                onChange={(e) => setObsPlatform(e.target.value as ObsPlatform)}
+              >
+                <option value='bilibili'>B 站</option>
+                <option value='douyin'>抖音</option>
+              </select>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>清晰度</Field.Label>
+              <select
+                value={obsQuality}
+                onChange={(e) => setObsQuality(e.target.value as ObsQuality)}
+              >
+                <option value='smooth'>流畅 720p30</option>
+                <option value='hd'>高清 1080p30</option>
+                <option value='ultra'>超清 1080p60</option>
+              </select>
+            </Field.Root>
+          </Box>
+
+          <Box className='obs-preset-summary'>
+            <Box>当前预设：{preset.name}</Box>
+            <Box>
+              H.264 / CBR / {preset.videoBitrateKbps} kbps /{' '}
+              {preset.width}x{preset.height} / {preset.fps} FPS / 关键帧{' '}
+              {preset.keyframeIntervalSec} 秒 / AAC {preset.audioBitrateKbps}{' '}
+              kbps
+            </Box>
+          </Box>
+
+          <Box display='grid' gridTemplateColumns='repeat(2, minmax(0, 1fr))' gap={4} alignItems='flex-start'>
+            <Field.Root>
+              <Field.Label>OBS WebSocket 地址</Field.Label>
+              <Input
+                value={obsAddress}
+                onChange={(e) => setObsAddress(e.target.value)}
+                placeholder='ws://127.0.0.1:4455'
+              />
+              <Field.HelperText>
+                OBS 28+ 默认端口通常是 4455，请先在 OBS 中启用 WebSocket。
+              </Field.HelperText>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>OBS WebSocket 密码</Field.Label>
+              <Input
+                value={obsPassword}
+                onChange={(e) => setObsPassword(e.target.value)}
+                type='password'
+                placeholder='未设置密码可留空'
+              />
+              <Field.HelperText>密码不会保存。</Field.HelperText>
+            </Field.Root>
+          </Box>
+
+          <Field.Root>
+            <Field.Label>RTMP 服务器地址</Field.Label>
+            <Input
+              value={rtmpServer}
+              onChange={(e) => setRtmpServer(e.target.value)}
+              placeholder='rtmp://...'
+            />
+            <Field.HelperText>
+              请从 B 站直播中心、抖音直播后台或直播伴侣复制平台给出的地址。
+            </Field.HelperText>
+          </Field.Root>
+
+          <Field.Root>
+            <Field.Label>推流密钥</Field.Label>
+            <Input
+              value={streamKey}
+              onChange={(e) => setStreamKey(e.target.value)}
+              type='password'
+              placeholder='平台提供的 Stream Key'
+            />
+            <Field.HelperText>推流密钥不会保存，也不会写入本地配置。</Field.HelperText>
+          </Field.Root>
+
+          <Button
+            colorScheme='blue'
+            onClick={async () => {
+              setObsApplyStatus(undefined);
+              try {
+                const result = await obs.applyPreset({
+                  connection: {
+                    address: obsAddress ?? '',
+                    authSecret: obsPassword,
+                  },
+                  stream: {
+                    server: rtmpServer,
+                    key: streamKey,
+                  },
+                  preset,
+                });
+                setObsApplyStatus({
+                  type: 'success',
+                  message:
+                    result.warnings.length > 0
+                      ? `已应用主要配置，部分 OBS 输出参数未写入：${result.warnings.join(
+                          '；'
+                        )}`
+                      : 'OBS 推流配置已应用。',
+                });
+                setObsPassword('');
+                setRtmpServer('');
+                setStreamKey('');
+              } catch (error) {
+                setObsApplyStatus({
+                  type: 'error',
+                  message:
+                    error instanceof Error
+                      ? error.message
+                      : 'OBS 推流配置应用失败',
+                });
+              }
+            }}
+          >
+            一键应用到 OBS
+          </Button>
+
+          {obsApplyStatus && (
+            <Box
+              color={obsApplyStatus.type === 'success' ? 'green.700' : 'red.700'}
+              fontWeight='medium'
+            >
+              {obsApplyStatus.message}
+            </Box>
+          )}
+        </Box>
+      </Box>
+    );
+  };
+
+  useEffect(() => {
+    if (!obsPassword && !rtmpServer && !streamKey) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setObsPassword('');
+      setRtmpServer('');
+      setStreamKey('');
+    }, SENSITIVE_DATA_CLEAR_TIMEOUT_MS);
+
+    return () => clearTimeout(timeout);
+  }, [obsPassword, rtmpServer, streamKey]);
+
   const panes = {
     danmaku: {
       name: '弹幕姬',
@@ -71,6 +258,11 @@ function App() {
       },
       keepAlive: true,
       needClick: true,
+    },
+    obsSettings: {
+      name: 'OBS 配置',
+      render: renderObsSettings,
+      keepAlive: true,
     },
     room: {
       disabled: !settings.roomId,

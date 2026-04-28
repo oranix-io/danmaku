@@ -18,9 +18,11 @@ import {
   DanmakuClient,
 } from '@lib/bililive/main/live/danmaku';
 import { danmakuNotificationChannel } from 'common/ipc';
+import { applyObsPresetChannel } from 'common/ipc';
 import { Disposable } from 'common/disposable';
 import { EMessageEventType } from '@lib/bililive/common/types/danmaku';
 import { IGetInfoResponse } from '@lib/bililive/main/live/api';
+import { applyObsPreset } from './obs';
 
 function isObject(obj: any) {
   return typeof obj === 'object' && obj !== null;
@@ -52,6 +54,10 @@ ipcMain.handle('get-owner-browser-window-id', (event) => {
 
 ipcMain.handle('open-danmaku', (event, roomId) => {
   createDanmakuWindow(roomId);
+});
+
+ipcMain.handle(applyObsPresetChannel, async (event, options) => {
+  return applyObsPreset(options);
 });
 
 ipcMain.handle('retrieve-danmaku', async (event, { roomId }) => {
