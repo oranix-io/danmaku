@@ -1,30 +1,20 @@
 import './App.css';
 import { useLocalStorageState, useSetState } from 'ahooks';
 import {
-  Alert,
-  AlertIcon,
   Box,
   Button,
+  Field,
   Grid,
   GridItem,
-  HStack,
-  List,
+  Input,
   ListItem,
-  Select,
-  Stack,
-  Text,
+  ListRoot,
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
 import { useEffect, useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
 import type { ObsPlatform, ObsQuality } from '@common/obs';
-import {
-  FormControl,
-  FormLabel,
-  FormHelperText,
-  Input,
-} from '@chakra-ui/react';
 
 const SENSITIVE_DATA_CLEAR_TIMEOUT_MS = 10 * 60 * 1000;
 
@@ -95,94 +85,94 @@ function App() {
     const preset = obs.presets[obsPlatform ?? 'bilibili'][obsQuality ?? 'hd'];
     return (
       <Box className='obs-settings'>
-        <Stack spacing={4}>
+        <Box display='flex' flexDirection='column' gap={4}>
           <Box>
             <h1>OBS 一键配置</h1>
-            <Text>
+            <Box>
               选择平台和清晰度后，会通过 OBS WebSocket 写入推荐编码、码率、分辨率、帧率、关键帧和自定义 RTMP。推流地址和密钥需要从平台开播页面手动填写，不会保存到本地。
-            </Text>
+            </Box>
           </Box>
 
-          <HStack alignItems='flex-start'>
-            <FormControl>
-              <FormLabel>平台</FormLabel>
-              <Select
+          <Box display='grid' gridTemplateColumns='repeat(2, minmax(0, 1fr))' gap={4} alignItems='flex-start'>
+            <Field.Root>
+              <Field.Label>平台</Field.Label>
+              <select
                 value={obsPlatform}
                 onChange={(e) => setObsPlatform(e.target.value as ObsPlatform)}
               >
                 <option value='bilibili'>B 站</option>
                 <option value='douyin'>抖音</option>
-              </Select>
-            </FormControl>
-            <FormControl>
-              <FormLabel>清晰度</FormLabel>
-              <Select
+              </select>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>清晰度</Field.Label>
+              <select
                 value={obsQuality}
                 onChange={(e) => setObsQuality(e.target.value as ObsQuality)}
               >
                 <option value='smooth'>流畅 720p30</option>
                 <option value='hd'>高清 1080p30</option>
                 <option value='ultra'>超清 1080p60</option>
-              </Select>
-            </FormControl>
-          </HStack>
+              </select>
+            </Field.Root>
+          </Box>
 
           <Box className='obs-preset-summary'>
-            <Text>当前预设：{preset.name}</Text>
-            <Text>
+            <Box>当前预设：{preset.name}</Box>
+            <Box>
               H.264 / CBR / {preset.videoBitrateKbps} kbps /{' '}
               {preset.width}x{preset.height} / {preset.fps} FPS / 关键帧{' '}
               {preset.keyframeIntervalSec} 秒 / AAC {preset.audioBitrateKbps}{' '}
               kbps
-            </Text>
+            </Box>
           </Box>
 
-          <HStack alignItems='flex-start'>
-            <FormControl>
-              <FormLabel>OBS WebSocket 地址</FormLabel>
+          <Box display='grid' gridTemplateColumns='repeat(2, minmax(0, 1fr))' gap={4} alignItems='flex-start'>
+            <Field.Root>
+              <Field.Label>OBS WebSocket 地址</Field.Label>
               <Input
                 value={obsAddress}
                 onChange={(e) => setObsAddress(e.target.value)}
                 placeholder='ws://127.0.0.1:4455'
               />
-              <FormHelperText>
+              <Field.HelperText>
                 OBS 28+ 默认端口通常是 4455，请先在 OBS 中启用 WebSocket。
-              </FormHelperText>
-            </FormControl>
-            <FormControl>
-              <FormLabel>OBS WebSocket 密码</FormLabel>
+              </Field.HelperText>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>OBS WebSocket 密码</Field.Label>
               <Input
                 value={obsPassword}
                 onChange={(e) => setObsPassword(e.target.value)}
                 type='password'
                 placeholder='未设置密码可留空'
               />
-              <FormHelperText>密码不会保存。</FormHelperText>
-            </FormControl>
-          </HStack>
+              <Field.HelperText>密码不会保存。</Field.HelperText>
+            </Field.Root>
+          </Box>
 
-          <FormControl>
-            <FormLabel>RTMP 服务器地址</FormLabel>
+          <Field.Root>
+            <Field.Label>RTMP 服务器地址</Field.Label>
             <Input
               value={rtmpServer}
               onChange={(e) => setRtmpServer(e.target.value)}
               placeholder='rtmp://...'
             />
-            <FormHelperText>
+            <Field.HelperText>
               请从 B 站直播中心、抖音直播后台或直播伴侣复制平台给出的地址。
-            </FormHelperText>
-          </FormControl>
+            </Field.HelperText>
+          </Field.Root>
 
-          <FormControl>
-            <FormLabel>推流密钥</FormLabel>
+          <Field.Root>
+            <Field.Label>推流密钥</Field.Label>
             <Input
               value={streamKey}
               onChange={(e) => setStreamKey(e.target.value)}
               type='password'
               placeholder='平台提供的 Stream Key'
             />
-            <FormHelperText>推流密钥不会保存，也不会写入本地配置。</FormHelperText>
-          </FormControl>
+            <Field.HelperText>推流密钥不会保存，也不会写入本地配置。</Field.HelperText>
+          </Field.Root>
 
           <Button
             colorScheme='blue'
@@ -227,12 +217,14 @@ function App() {
           </Button>
 
           {obsApplyStatus && (
-            <Alert status={obsApplyStatus.type}>
-              <AlertIcon />
+            <Box
+              color={obsApplyStatus.type === 'success' ? 'green.700' : 'red.700'}
+              fontWeight='medium'
+            >
               {obsApplyStatus.message}
-            </Alert>
+            </Box>
           )}
-        </Stack>
+        </Box>
       </Box>
     );
   };
@@ -290,8 +282,8 @@ function App() {
         return (
           <Box>
             <Box>设置</Box>
-            <FormControl>
-              <FormLabel>直播间房号</FormLabel>
+            <Field.Root>
+              <Field.Label>直播间房号</Field.Label>
               <Input
                 type='text'
                 onChange={(e) => {
@@ -301,8 +293,8 @@ function App() {
                 }}
                 value={settings.roomId}
               />
-              <FormHelperText>用来设置侧边的直播间房号</FormHelperText>
-            </FormControl>
+              <Field.HelperText>用来设置侧边的直播间房号</Field.HelperText>
+            </Field.Root>
           </Box>
         );
       },
@@ -372,7 +364,7 @@ function App() {
     >
       <GridItem area={'header'}></GridItem>
       <GridItem bg={'blue.300'} area={'nav'}>
-        <List className='nav-bar' userSelect={'none'} spacing={1}>
+        <ListRoot className='nav-bar' userSelect={'none'} gap={1}>
           {Object.entries(panes).map(([key, value]) => {
             if (value.disabled) {
               return null;
@@ -405,7 +397,7 @@ function App() {
               </ListItem>
             );
           })}
-        </List>
+        </ListRoot>
       </GridItem>
       <GridItem bg={'green.300'} area={'main'}>
         {paneNames.map((key) => {
