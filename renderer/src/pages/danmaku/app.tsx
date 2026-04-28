@@ -51,6 +51,24 @@ const kLineHeight = 24;
 const kLineHeightPx = `${kLineHeight}px`;
 const kColorModeStorageKey = 'chakra-ui-color-mode';
 
+const getInitialColorMode = (): 'light' | 'dark' => {
+  try {
+    return localStorage.getItem(kColorModeStorageKey) === 'dark'
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
+};
+
+const persistColorMode = (colorMode: 'light' | 'dark') => {
+  try {
+    localStorage.setItem(kColorModeStorageKey, colorMode);
+  } catch {
+    return;
+  }
+};
+
 const DanmakuItem = (props: { data: IDanmaku }) => {
   const { data: danmaku } = props;
   const renderMedal = (danmaku: IDanmaku) => {
@@ -195,24 +213,21 @@ export function App() {
     useState(false);
   const danmakuList = useDynamicList<IDanmakuItem>([]);
 
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
-    return localStorage.getItem(kColorModeStorageKey) === 'dark'
-      ? 'dark'
-      : 'light';
-  });
+  const [colorMode, setColorMode] =
+    useState<'light' | 'dark'>(getInitialColorMode);
   const toggleColorMode = () => {
     setColorMode((currentColorMode) =>
       currentColorMode === 'light' ? 'dark' : 'light'
     );
   };
-  const handleColorModeKeyDown = (event: KeyboardEvent<SVGSVGElement>) => {
+  const handleToggleKeyDown = (event: KeyboardEvent<SVGSVGElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       toggleColorMode();
     }
   };
   useEffect(() => {
-    localStorage.setItem(kColorModeStorageKey, colorMode);
+    persistColorMode(colorMode);
   }, [colorMode]);
   useEffect(() => {
     const eventListener = (event: Event) => {
@@ -359,7 +374,7 @@ export function App() {
               cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-              onKeyDown={handleColorModeKeyDown}
+              onKeyDown={handleToggleKeyDown}
               role='button'
               tabIndex={0}
             />
@@ -370,7 +385,7 @@ export function App() {
               cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-              onKeyDown={handleColorModeKeyDown}
+              onKeyDown={handleToggleKeyDown}
               role='button'
               tabIndex={0}
             />
