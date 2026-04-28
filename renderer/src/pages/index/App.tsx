@@ -26,6 +26,8 @@ import {
   Input,
 } from '@chakra-ui/react';
 
+const SENSITIVE_DATA_CLEAR_TIMEOUT_MS = 10 * 60 * 1000;
+
 function App() {
   const [roomId, setRoomId] = useLocalStorageState('roomId', {
     defaultValue: '',
@@ -97,7 +99,7 @@ function App() {
           <Box>
             <h1>OBS 一键配置</h1>
             <Text>
-              选择平台和清晰度后，会通过 OBS WebSocket 写入推荐编码、码率、分辨率、帧率、关键帧和自定义 RTMP。推流地址和密钥需要从平台开播页手动填写，不会保存到本地。
+              选择平台和清晰度后，会通过 OBS WebSocket 写入推荐编码、码率、分辨率、帧率、关键帧和自定义 RTMP。推流地址和密钥需要从平台开播页面手动填写，不会保存到本地。
             </Text>
           </Box>
 
@@ -244,7 +246,7 @@ function App() {
       setObsPassword('');
       setRtmpServer('');
       setStreamKey('');
-    }, 10 * 60 * 1000);
+    }, SENSITIVE_DATA_CLEAR_TIMEOUT_MS);
 
     return () => clearTimeout(timeout);
   }, [obsPassword, rtmpServer, streamKey]);
