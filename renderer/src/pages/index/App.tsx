@@ -6,8 +6,8 @@ import {
   Field,
   Grid,
   GridItem,
-  ListRoot,
   ListItem,
+  ListRoot,
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';

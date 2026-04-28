@@ -43,6 +43,7 @@ interface IDanmakuItem {
 
 const kLineHeight = 24;
 const kLineHeightPx = `${kLineHeight}px`;
+const kColorModeStorageKey = 'chakra-ui-color-mode';
 
 const DanmakuItem = (props: { data: IDanmaku }) => {
   const { data: danmaku } = props;
@@ -188,12 +189,19 @@ export function App() {
     useState(false);
   const danmakuList = useDynamicList<IDanmakuItem>([]);
 
-  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>(() => {
+    return localStorage.getItem(kColorModeStorageKey) === 'dark'
+      ? 'dark'
+      : 'light';
+  });
   const toggleColorMode = () => {
     setColorMode((currentColorMode) =>
       currentColorMode === 'light' ? 'dark' : 'light'
     );
   };
+  useEffect(() => {
+    localStorage.setItem(kColorModeStorageKey, colorMode);
+  }, [colorMode]);
   useEffect(() => {
     const eventListener = (event: Event) => {
       const eventData = (event as MessageEvent).data;
