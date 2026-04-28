@@ -7318,12 +7318,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-icons@npm:^4.9.0":
-  version: 4.9.0
-  resolution: "react-icons@npm:4.9.0"
+"react-icons@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "react-icons@npm:5.6.0"
   peerDependencies:
     react: "*"
-  checksum: 69d1000d02349cf4baa78a0882aff09723d348d910256ea7489dea777abf10f158b27c1b5d3b1d2ec030e21320eae0afcc13f9c9d11afb85a8809c59a23a923c
+  checksum: 332358dff0926650b82c352c7af1b6da14848738356c7b6d7dc09b9a84d53d2486b38f33c6fea8b1b802a29d5543fc6cfaffd82ca71a11021f1c59128daa8361
   languageName: node
   linkType: hard
 
@@ -7437,7 +7437,7 @@ __metadata:
     framer-motion: ^10.12.16
     react: ^18.3.1
     react-dom: ^18.2.0
-    react-icons: ^4.9.0
+    react-icons: ^5.6.0
     react-virtuoso: ^4.18.6
   languageName: unknown
   linkType: soft
