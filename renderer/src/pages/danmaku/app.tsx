@@ -1,6 +1,6 @@
 import './app.css';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useColorMode, Box, Flex } from '@chakra-ui/react';
+import { Box, Flex, Icon } from '@chakra-ui/react';
 import { danmakuNotificationChannel } from '@@common/ipc';
 import {
   EMessageEventType,
@@ -13,7 +13,7 @@ import {
   IDanmaku,
   IPacketWatchedChange,
 } from '@@lib/bililive/common/entity';
-import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { FaMoon, FaSun } from 'react-icons/fa';
 import { Virtuoso } from 'react-virtuoso';
 import { useDynamicList } from 'ahooks';
 
@@ -188,7 +188,12 @@ export function App() {
     useState(false);
   const danmakuList = useDynamicList<IDanmakuItem>([]);
 
-  const { colorMode, toggleColorMode } = useColorMode();
+  const [colorMode, setColorMode] = useState<'light' | 'dark'>('light');
+  const toggleColorMode = () => {
+    setColorMode((currentColorMode) =>
+      currentColorMode === 'light' ? 'dark' : 'light'
+    );
+  };
   useEffect(() => {
     const eventListener = (event: Event) => {
       const eventData = (event as MessageEvent).data;
@@ -328,21 +333,19 @@ export function App() {
           p={2}
         >
           {colorMode === 'light' ? (
-            <MoonIcon
-              _hover={{
-                cursor: 'pointer',
-              }}
+            <Icon
+              as={FaMoon}
+              cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-            ></MoonIcon>
+            />
           ) : (
-            <SunIcon
-              _hover={{
-                cursor: 'pointer',
-              }}
+            <Icon
+              as={FaSun}
+              cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-            ></SunIcon>
+            />
           )}
           <Box ml='5px'>
             {watchedChange.num} 人看过，当前人气：{popularity}
