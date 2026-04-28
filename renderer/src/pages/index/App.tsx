@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
 import type { ObsPlatform, ObsQuality } from '@common/obs';
 import {
@@ -179,7 +179,7 @@ function App() {
               type='password'
               placeholder='平台提供的 Stream Key'
             />
-            <FormHelperText>推流密钥不会保存，也不会写入应用配置。</FormHelperText>
+            <FormHelperText>推流密钥不会保存，也不会写入本地配置。</FormHelperText>
           </FormControl>
 
           <Button
@@ -234,6 +234,20 @@ function App() {
       </Box>
     );
   };
+
+  useEffect(() => {
+    if (!obsPassword && !rtmpServer && !streamKey) {
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      setObsPassword('');
+      setRtmpServer('');
+      setStreamKey('');
+    }, 10 * 60 * 1000);
+
+    return () => clearTimeout(timeout);
+  }, [obsPassword, rtmpServer, streamKey]);
 
   const panes = {
     danmaku: {

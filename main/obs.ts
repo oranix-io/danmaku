@@ -201,7 +201,7 @@ class ObsWebSocketClient {
     this.pendingRequests.delete(requestId);
     clearTimeout(pendingRequest.timeout);
     const status = message.d?.requestStatus;
-    if (status?.result) {
+    if (status?.result === true) {
       pendingRequest.resolve(message.d?.responseData);
     } else {
       pendingRequest.reject(
