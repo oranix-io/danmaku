@@ -1,5 +1,11 @@
 import './app.css';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  type KeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Box, Flex, Icon } from '@chakra-ui/react';
 import { danmakuNotificationChannel } from '@@common/ipc';
 import {
@@ -199,6 +205,12 @@ export function App() {
       currentColorMode === 'light' ? 'dark' : 'light'
     );
   };
+  const handleColorModeKeyDown = (event: KeyboardEvent<SVGSVGElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleColorMode();
+    }
+  };
   useEffect(() => {
     localStorage.setItem(kColorModeStorageKey, colorMode);
   }, [colorMode]);
@@ -343,16 +355,24 @@ export function App() {
           {colorMode === 'light' ? (
             <Icon
               as={FaMoon}
+              aria-label='Switch to dark mode'
               cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
+              onKeyDown={handleColorModeKeyDown}
+              role='button'
+              tabIndex={0}
             />
           ) : (
             <Icon
               as={FaSun}
+              aria-label='Switch to light mode'
               cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
+              onKeyDown={handleColorModeKeyDown}
+              role='button'
+              tabIndex={0}
             />
           )}
           <Box ml='5px'>
