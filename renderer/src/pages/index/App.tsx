@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
 import type { ObsPlatform, ObsQuality } from '@common/obs';
 import {
@@ -234,14 +234,6 @@ function App() {
       </Box>
     );
   };
-
-  useEffect(() => {
-    return () => {
-      setObsPassword('');
-      setRtmpServer('');
-      setStreamKey('');
-    };
-  }, []);
 
   const panes = {
     danmaku: {

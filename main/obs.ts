@@ -10,7 +10,11 @@ interface ObsMessage {
 interface PendingRequest {
   resolve: (value: unknown) => void;
   reject: (reason?: unknown) => void;
+  timeout: NodeJS.Timeout;
 }
+
+const CONNECTION_TIMEOUT_MS = 8000;
+const REQUEST_TIMEOUT_MS = 8000;
 
 function hashBase64(value: string) {
   return crypto.createHash('sha256').update(value).digest('base64');
@@ -79,7 +83,7 @@ class ObsWebSocketClient {
         cleanup();
         reject(new Error('连接 OBS WebSocket 超时，请确认 OBS 已启动并开启 WebSocket 服务'));
         websocket.close();
-      }, 8000);
+      }, CONNECTION_TIMEOUT_MS);
 
       websocket.once('error', onError);
       websocket.once('open', onOpen);
@@ -115,7 +119,11 @@ class ObsWebSocketClient {
 
     const requestId = String(++this.requestId);
     const response = new Promise((resolve, reject) => {
-      this.pendingRequests.set(requestId, { resolve, reject });
+      const timeout = setTimeout(() => {
+        this.pendingRequests.delete(requestId);
+        reject(new Error(`${requestType} 请求 OBS 超时`));
+      }, REQUEST_TIMEOUT_MS);
+      this.pendingRequests.set(requestId, { resolve, reject, timeout });
     });
 
     this.websocket.send(
@@ -191,6 +199,7 @@ class ObsWebSocketClient {
     }
 
     this.pendingRequests.delete(requestId);
+    clearTimeout(pendingRequest.timeout);
     const status = message.d?.requestStatus;
     if (status?.result) {
       pendingRequest.resolve(message.d?.responseData);
@@ -203,6 +212,7 @@ class ObsWebSocketClient {
 
   private rejectPendingRequests(error: Error) {
     for (const pendingRequest of this.pendingRequests.values()) {
+      clearTimeout(pendingRequest.timeout);
       pendingRequest.reject(error);
     }
     this.pendingRequests.clear();
