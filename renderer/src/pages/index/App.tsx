@@ -1,16 +1,19 @@
 import './App.css';
 import { useLocalStorageState, useSetState } from 'ahooks';
-import { Box, Button, Grid, GridItem, List, ListItem } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  Field,
+  Grid,
+  GridItem,
+  ListItem,
+  ListRoot,
+} from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
 import { useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
-import {
-  FormControl,
-  FormLabel,
-  FormHelperText,
-  Input,
-} from '@chakra-ui/react';
+import { Input } from '@chakra-ui/react';
 
 function App() {
   const [roomId, setRoomId] = useLocalStorageState('roomId', {
@@ -87,8 +90,8 @@ function App() {
         return (
           <Box>
             <Box>设置</Box>
-            <FormControl>
-              <FormLabel>直播间房号</FormLabel>
+            <Field.Root>
+              <Field.Label>直播间房号</Field.Label>
               <Input
                 type='text'
                 onChange={(e) => {
@@ -98,8 +101,8 @@ function App() {
                 }}
                 value={settings.roomId}
               />
-              <FormHelperText>用来设置侧边的直播间房号</FormHelperText>
-            </FormControl>
+              <Field.HelperText>用来设置侧边的直播间房号</Field.HelperText>
+            </Field.Root>
           </Box>
         );
       },
@@ -169,7 +172,7 @@ function App() {
     >
       <GridItem area={'header'}></GridItem>
       <GridItem bg={'blue.300'} area={'nav'}>
-        <List className='nav-bar' userSelect={'none'} spacing={1}>
+        <ListRoot className='nav-bar' userSelect={'none'} gap={1}>
           {Object.entries(panes).map(([key, value]) => {
             if (value.disabled) {
               return null;
@@ -202,7 +205,7 @@ function App() {
               </ListItem>
             );
           })}
-        </List>
+        </ListRoot>
       </GridItem>
       <GridItem bg={'green.300'} area={'main'}>
         {paneNames.map((key) => {

@@ -1,6 +1,12 @@
 import './app.css';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { useColorMode, Box, Flex } from '@chakra-ui/react';
+import {
+  type KeyboardEvent,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { Box, Flex, Icon } from '@chakra-ui/react';
 import { danmakuNotificationChannel } from '@@common/ipc';
 import {
   EMessageEventType,
@@ -13,7 +19,7 @@ import {
   IDanmaku,
   IPacketWatchedChange,
 } from '@@lib/bililive/common/entity';
-import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { FaMoon, FaSun } from 'react-icons/fa';
 import { Virtuoso } from 'react-virtuoso';
 import { useDynamicList } from 'ahooks';
 
@@ -43,6 +49,25 @@ interface IDanmakuItem {
 
 const kLineHeight = 24;
 const kLineHeightPx = `${kLineHeight}px`;
+const kColorModeStorageKey = 'chakra-ui-color-mode';
+
+const getInitialColorMode = (): 'light' | 'dark' => {
+  try {
+    return localStorage.getItem(kColorModeStorageKey) === 'dark'
+      ? 'dark'
+      : 'light';
+  } catch {
+    return 'light';
+  }
+};
+
+const persistColorMode = (colorMode: 'light' | 'dark') => {
+  try {
+    localStorage.setItem(kColorModeStorageKey, colorMode);
+  } catch {
+    return;
+  }
+};
 
 const DanmakuItem = (props: { data: IDanmaku }) => {
   const { data: danmaku } = props;
@@ -188,7 +213,22 @@ export function App() {
     useState(false);
   const danmakuList = useDynamicList<IDanmakuItem>([]);
 
-  const { colorMode, toggleColorMode } = useColorMode();
+  const [colorMode, setColorMode] =
+    useState<'light' | 'dark'>(getInitialColorMode);
+  const toggleColorMode = () => {
+    setColorMode((currentColorMode) =>
+      currentColorMode === 'light' ? 'dark' : 'light'
+    );
+  };
+  const handleToggleKeyDown = (event: KeyboardEvent<SVGSVGElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleColorMode();
+    }
+  };
+  useEffect(() => {
+    persistColorMode(colorMode);
+  }, [colorMode]);
   useEffect(() => {
     const eventListener = (event: Event) => {
       const eventData = (event as MessageEvent).data;
@@ -328,21 +368,27 @@ export function App() {
           p={2}
         >
           {colorMode === 'light' ? (
-            <MoonIcon
-              _hover={{
-                cursor: 'pointer',
-              }}
+            <Icon
+              as={FaMoon}
+              aria-label='Switch to dark mode'
+              cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-            ></MoonIcon>
+              onKeyDown={handleToggleKeyDown}
+              role='button'
+              tabIndex={0}
+            />
           ) : (
-            <SunIcon
-              _hover={{
-                cursor: 'pointer',
-              }}
+            <Icon
+              as={FaSun}
+              aria-label='Switch to light mode'
+              cursor={'pointer'}
               boxSize={6}
               onClick={toggleColorMode}
-            ></SunIcon>
+              onKeyDown={handleToggleKeyDown}
+              role='button'
+              tabIndex={0}
+            />
           )}
           <Box ml='5px'>
             {watchedChange.num} 人看过，当前人气：{popularity}
