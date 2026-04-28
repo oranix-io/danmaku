@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import uniq from 'lodash/uniq';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { WebviewWithController } from '@/components/webview-controller';
 import type { ObsPlatform, ObsQuality } from '@common/obs';
 import {
@@ -190,7 +190,7 @@ function App() {
                 const result = await obs.applyPreset({
                   connection: {
                     address: obsAddress ?? '',
-                    password: obsPassword,
+                    authSecret: obsPassword,
                   },
                   stream: {
                     server: rtmpServer,
@@ -207,6 +207,9 @@ function App() {
                         )}`
                       : 'OBS 推流配置已应用。',
                 });
+                setObsPassword('');
+                setRtmpServer('');
+                setStreamKey('');
               } catch (error) {
                 setObsApplyStatus({
                   type: 'error',
@@ -231,6 +234,14 @@ function App() {
       </Box>
     );
   };
+
+  useEffect(() => {
+    return () => {
+      setObsPassword('');
+      setRtmpServer('');
+      setStreamKey('');
+    };
+  }, []);
 
   const panes = {
     danmaku: {

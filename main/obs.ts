@@ -16,8 +16,8 @@ function hashBase64(value: string) {
   return crypto.createHash('sha256').update(value).digest('base64');
 }
 
-function buildAuthentication(password: string, salt: string, challenge: string) {
-  const secret = hashBase64(password + salt);
+function buildAuthentication(authSecret: string, salt: string, challenge: string) {
+  const secret = hashBase64(authSecret + salt);
   return hashBase64(secret + challenge);
 }
 
@@ -56,25 +56,39 @@ class ObsWebSocketClient {
   private requestId = 0;
   private pendingRequests = new Map<string, PendingRequest>();
 
-  async connect(address: string, password?: string) {
+  async connect(address: string, authSecret?: string) {
     const url = normalizeObsAddress(address);
     const websocket = new WebSocket(url);
     this.websocket = websocket;
 
     await new Promise<void>((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout);
+        websocket.off('error', onError);
+        websocket.off('open', onOpen);
+      };
+      const onError = (error: Error) => {
+        cleanup();
+        reject(error);
+      };
+      const onOpen = () => {
+        cleanup();
+        resolve();
+      };
       const timeout = setTimeout(() => {
+        cleanup();
         reject(new Error('连接 OBS WebSocket 超时，请确认 OBS 已启动并开启 WebSocket 服务'));
         websocket.close();
       }, 8000);
 
-      websocket.once('error', reject);
-      websocket.once('open', () => {
-        clearTimeout(timeout);
-        resolve();
-      });
+      websocket.once('error', onError);
+      websocket.once('open', onOpen);
     });
 
     websocket.on('message', (data) => this.handleMessage(data.toString()));
+    websocket.once('close', () => {
+      this.rejectPendingRequests(new Error('OBS WebSocket 连接已关闭'));
+    });
 
     const hello = await this.waitForMessage(0);
     const authentication = hello.d?.authentication;
@@ -83,7 +97,7 @@ class ObsWebSocketClient {
       ...(authentication
         ? {
             authentication: buildAuthentication(
-              password ?? '',
+              authSecret ?? '',
               authentication.salt,
               authentication.challenge
             ),
@@ -119,8 +133,8 @@ class ObsWebSocketClient {
   }
 
   close() {
+    this.rejectPendingRequests(new Error('OBS WebSocket 连接已关闭'));
     this.websocket?.close();
-    this.pendingRequests.clear();
   }
 
   private waitForMessage(op: number) {
@@ -142,13 +156,19 @@ class ObsWebSocketClient {
         cleanup();
         reject(error);
       };
+      const onClose = () => {
+        cleanup();
+        reject(new Error('OBS WebSocket 连接已关闭'));
+      };
       const cleanup = () => {
         websocket.off('message', onMessage);
         websocket.off('error', onError);
+        websocket.off('close', onClose);
       };
 
       websocket.on('message', onMessage);
       websocket.once('error', onError);
+      websocket.once('close', onClose);
     });
   }
 
@@ -180,6 +200,13 @@ class ObsWebSocketClient {
       );
     }
   }
+
+  private rejectPendingRequests(error: Error) {
+    for (const pendingRequest of this.pendingRequests.values()) {
+      pendingRequest.reject(error);
+    }
+    this.pendingRequests.clear();
+  }
 }
 
 async function requestBestEffort(
@@ -209,7 +236,10 @@ export async function applyObsPreset(
   const warnings: string[] = [];
 
   try {
-    await client.connect(options.connection.address, options.connection.password);
+    await client.connect(
+      options.connection.address,
+      options.connection.authSecret
+    );
 
     await client.request('SetStreamServiceSettings', {
       streamServiceType: 'rtmp_custom',

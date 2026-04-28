@@ -15,7 +15,7 @@ export interface ObsPreset {
 
 export interface ObsConnectionOptions {
   address: string;
-  password?: string;
+  authSecret?: string;
 }
 
 export interface ObsStreamSettings {
